@@ -1,0 +1,48 @@
+# =========================
+# React Frontend
+# =========================
+
+Interviewzwt/node_modules/
+Interviewzwt/build/
+Interviewzwt/dist/
+Interviewzwt/coverage/
+
+Interviewzwt/.env
+Interviewzwt/.env.*
+!Interviewzwt/.env.example
+
+# =========================
+# .NET Backend
+# =========================
+
+Interviewzwt.Backend/bin/
+Interviewzwt.Backend/obj/
+
+Interviewzwt.Backend/appsettings.Development.json
+Interviewzwt.Backend/appsettings.Local.json
+
+Interviewzwt.Backend/*.db
+Interviewzwt.Backend/*.db-shm
+Interviewzwt.Backend/*.db-wal
+
+# =========================
+# IDE
+# =========================
+
+.vs/
+.vscode/
+.idea/
+
+# =========================
+# Logs
+# =========================
+
+*.log
+logs/
+
+# =========================
+# OS Files
+# =========================
+
+.DS_Store
+Thumbs.db

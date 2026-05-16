@@ -1,0 +1,6 @@
+@Interviewzwt.Backend_HostAddress = http://localhost:5070
+
+GET {{Interviewzwt.Backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

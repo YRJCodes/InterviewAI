@@ -45,6 +45,15 @@ namespace Interviewzwt.Backend.Services
                 return false;
             }
 
+            var sessionsWithCustomJob = await _context.InterviewSessions
+                .Where(session => session.CustomJobId == customJobId)
+                .ToListAsync();
+
+            foreach (var session in sessionsWithCustomJob)
+            {
+                session.CustomJobId = null;
+            }
+
             _context.CustomJobs.Remove(customJob);
             await _context.SaveChangesAsync();
             return true;

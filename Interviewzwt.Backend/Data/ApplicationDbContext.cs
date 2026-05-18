@@ -51,6 +51,12 @@ namespace Interviewzwt.Backend.Data
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<InterviewSession>()
+                .HasOne(s => s.CustomJob)
+                .WithMany()
+                .HasForeignKey(s => s.CustomJobId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<CustomJobDescription>()
                 .HasOne(j => j.User)
                 .WithMany()

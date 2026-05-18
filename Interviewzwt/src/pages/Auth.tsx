@@ -17,8 +17,22 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const isStrongPassword = (value: string) => {
+    const pattern = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}/;
+    return pattern.test(value);
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && !isStrongPassword(password)) {
+      toast({
+        title: 'Weak password',
+        description: 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -120,8 +134,14 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
+                  pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}"
                 />
+                {!isLogin && (
+                  <p className="text-xs text-muted-foreground">
+                    Use at least 8 characters, including uppercase, lowercase, a number, and a special symbol.
+                  </p>
+                )}
               </div>
               <Button
                 type="submit"

@@ -148,5 +148,5 @@ export const uploadFile = async (file: File, sessionId: string) => {
   }
 };
 
-export default { setToken, getToken, login, register, me, fetchJobRole, fetchCustomJob, listJobRoles, createSession, updateSession, getSession, analyzeResume, scoreInterview, voiceInterview, getProfile, updateCredits, createCustomJob, createPayPalOrder, capturePayPalOrder, uploadFile };
+export default { setToken, getToken, login, register, me, fetchJobRole, fetchCustomJob, listJobRoles, createSession, updateSession, getSession, getUserSessions, analyzeResume, scoreInterview, voiceInterview, getProfile, updateCredits, createCustomJob, createPayPalOrder, capturePayPalOrder, uploadFile };
 

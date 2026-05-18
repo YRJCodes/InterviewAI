@@ -12,6 +12,7 @@ interface InterviewSession {
   id?: string;
   createdAt?: string;
   completedAt?: string;
+  transcript?: string;
   resumeScore?: number;
   resume_score?: number;
   resumeFeedback?: string;
@@ -98,6 +99,15 @@ const Feedback = () => {
   const jobTitle = session.jobRole?.title || session.customJob?.title || session.jobRoleId?.title || session.customJobId?.title || session.job_roles?.title || 'Interview';
   
   const overallScore = Math.round((resumeScore + interviewScore) / 2);
+  const transcriptLines = session.transcript?.split('\n').filter(line => line.trim()) ?? [];
+  const transcriptItems = transcriptLines.map((line) => {
+    const [role, ...rest] = line.split(':');
+    return {
+      role: role?.trim() || 'Unknown',
+      content: rest.join(':').trim(),
+    };
+  });
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-accent";
     if (score >= 60) return "text-primary";
@@ -241,6 +251,25 @@ const Feedback = () => {
             </div>
           </CardContent>
         </Card>
+
+        {transcriptItems.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Question & answer history</CardTitle>
+              <CardDescription>Review the full interview transcript.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {transcriptItems.map((item, idx) => (
+                <div key={`${item.role}-${idx}`} className={`rounded-xl p-4 ${item.role.toLowerCase().includes('assistant') ? 'bg-secondary/5' : 'bg-primary/5'}`}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1">
+                    {item.role === 'assistant' || item.role === 'ai' ? 'Question' : 'Answer'}
+                  </p>
+                  <p className="text-sm">{item.content}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

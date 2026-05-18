@@ -79,12 +79,28 @@ const Dashboard = () => {
     }
   };
 
+  const normalizeSessions = (data: any): InterviewSession[] => {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.sessions)) return data.sessions;
+    if (data && Array.isArray(data.data)) return data.data;
+    return [];
+  };
+
   const fetchSessions = async () => {
     try {
-      const sessions = await apiClient.getUserSessions();
-      setSessions(Array.isArray(sessions) ? sessions : []);
+      const response = await apiClient.getUserSessions();
+      const sessionList = normalizeSessions(response);
+      if (!Array.isArray(response)) {
+        console.warn('Unexpected session response shape:', response);
+      }
+      setSessions(sessionList);
     } catch (error) {
       console.error('Error fetching sessions:', error);
+      toast({
+        title: 'Unable to load past interviews',
+        description: 'Please refresh or try again later.',
+        variant: 'destructive',
+      });
     }
   };
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import apiClient, { getToken } from "@/integrations/api/client";
+import apiClient from "@/integrations/api/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,11 @@ const VoiceInterview = () => {
   const [questionCount, setQuestionCount] = useState(0);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [isFinalQuestion, setIsFinalQuestion] = useState(false);
+  const [autoEnding, setAutoEnding] = useState(false);
+
+  const MAX_QUESTIONS = 7;
+  const MAX_DURATION_SECONDS = 15 * 60;
   const navigate = useNavigate();
   const { toast } = useToast();
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -68,14 +73,16 @@ const VoiceInterview = () => {
 
       recognition.onerror = (event: any) => {
         console.error("Speech recognition error", event.error);
-        if (event.error !== 'no-speech') {
-           setIsRecording(false);
-           toast({
-             title: "Microphone Error",
-             description: event.error,
-             variant: "destructive",
-           });
+        if (event.error === 'no-speech' || event.error === 'aborted') {
+          setIsRecording(false);
+          return;
         }
+        setIsRecording(false);
+        toast({
+          title: "Microphone Error",
+          description: event.error,
+          variant: "destructive",
+        });
       };
 
       recognitionRef.current = recognition;
@@ -107,6 +114,14 @@ const VoiceInterview = () => {
     return () => clearInterval(interval);
   }, [startTime]);
 
+  useEffect(() => {
+    if (!interviewStarted || autoEnding) return;
+    if (elapsedTime >= MAX_DURATION_SECONDS) {
+      setAutoEnding(true);
+      endInterview();
+    }
+  }, [elapsedTime, interviewStarted, autoEnding]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -136,6 +151,8 @@ const VoiceInterview = () => {
   const startInterview = async () => {
     setInterviewStarted(true);
     setIsAISpeaking(true);
+    setIsFinalQuestion(false);
+    setAutoEnding(false);
     const now = new Date();
     setStartTime(now);
     
@@ -207,15 +224,29 @@ const VoiceInterview = () => {
     
     try {
       const userMessage = transcript;
-      setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+      const updatedMessages = [...messages, { role: 'user', content: userMessage }];
+      setMessages(updatedMessages);
+
+      if (isFinalQuestion) {
+        toast({
+          title: "Final answer recorded",
+          description: "Wrapping up your interview now.",
+        });
+        await endInterview(updatedMessages);
+        return;
+      }
 
       // Generate AI response
       setIsAISpeaking(true);
-      const conversationHistory = [...messages, { role: 'user', content: userMessage }];
+      const conversationHistory = updatedMessages;
 
       const { message } = await apiClient.voiceInterview({ action: 'generate', messages: conversationHistory, jobDescription });
       setMessages(prev => [...prev, { role: 'assistant', content: message }]);
-      setQuestionCount(prev => prev + 1);
+      const nextCount = questionCount + 1;
+      setQuestionCount(nextCount);
+      if (nextCount >= MAX_QUESTIONS) {
+        setIsFinalQuestion(true);
+      }
       speakText(message);
 
     } catch (error: any) {
@@ -231,17 +262,26 @@ const VoiceInterview = () => {
     }
   };
 
-  const endInterview = async () => {
-    // Stop any ongoing speech
+  const endInterview = async (finalMessages?: Array<{ role: string; content: string }>) => {
+    // Stop any ongoing speech and recording
     window.speechSynthesis.cancel();
     setIsAISpeaking(false);
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
     
     try {
       const { user } = await apiClient.me();
       if (!user) throw new Error('Not authenticated');
 
-      // Generate final feedback based on conversation using scoreInterview
-      const conversationText = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+      const conversationArray = Array.isArray(finalMessages)
+        ? finalMessages
+        : Array.isArray(messages)
+        ? messages
+        : [];
+
+      const conversationText = conversationArray.map(m => `${m.role}: ${m.content}`).join('\n');
       
       if (!conversationText || conversationText.trim().length === 0) {
         throw new Error('No conversation to score');
@@ -310,7 +350,7 @@ const VoiceInterview = () => {
               <CardDescription>
                 This will be a conversational voice interview. Answer questions naturally as you would in a real interview.
                 <br /><br />
-                <strong>Interview Duration:</strong> Typically 5-7 questions (10-15 minutes)
+                <strong>Interview Duration:</strong> Up to {MAX_QUESTIONS} questions or {Math.floor(MAX_DURATION_SECONDS / 60)} minutes.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -352,7 +392,7 @@ const VoiceInterview = () => {
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
                     <span>
-                      {startTime ? `Expected finish by ${new Date(startTime.getTime() + 12 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Estimated 10-15 min'}
+                      {startTime ? `Expected finish by ${new Date(startTime.getTime() + MAX_DURATION_SECONDS * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Estimated 10-15 min'}
                     </span>
                   </div>
                 </div>
@@ -366,12 +406,14 @@ const VoiceInterview = () => {
               </Button>
             </div>
 
-            {questionCount >= 5 && (
-              <Card className="border-accent bg-accent/5">
+            {(MAX_QUESTIONS - questionCount) <= 2 && questionCount > 0 && (
+              <Card className="border-yellow-400 bg-yellow-50">
                 <CardContent className="pt-4">
-                  <p className="text-sm text-center">
-                    💡 <strong>Tip:</strong> You've answered {questionCount} questions. 
-                    A typical interview has 5-7 questions. Click "End Interview" when you're ready to get your feedback.
+                  <p className="text-sm text-center text-yellow-900">
+                    💡 <strong>{isFinalQuestion ? 'Final question!' : 'Almost there!'}</strong>
+                    {isFinalQuestion
+                      ? ' Answer this last question and your interview will automatically complete.'
+                      : ` ${MAX_QUESTIONS - questionCount} question${MAX_QUESTIONS - questionCount === 1 ? '' : 's'} remaining.`}
                   </p>
                 </CardContent>
               </Card>

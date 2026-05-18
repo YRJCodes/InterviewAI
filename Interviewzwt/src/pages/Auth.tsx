@@ -106,7 +106,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAuth} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-4" noValidate>
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
@@ -142,6 +142,8 @@ const Auth = () => {
                   required
                   minLength={8}
                   pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}"
+                  title="Password must include uppercase, lowercase, a number, and a special character."
+                  aria-invalid={!isLogin && password.length > 0 && !isPasswordStrong}
                 />
                 {!isLogin && (
                   <p className={`text-xs ${password.length === 0 ? 'text-muted-foreground' : isPasswordStrong ? 'text-emerald-600' : 'text-destructive'}`}>

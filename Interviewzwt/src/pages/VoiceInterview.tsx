@@ -289,21 +289,27 @@ const VoiceInterview = () => {
 
       console.log('Scoring interview with conversation:', conversationText.substring(0, 100) + '...');
       
+      const userAnswerCount = conversationArray.filter((m) => m.role === 'user' && m.content.trim()).length;
       let finalScore = 50;
       let finalFeedback = 'Interview completed. Unable to generate feedback at this time.';
 
-      try {
-        const scoreData = await apiClient.scoreInterview({ conversationText, jobDescription });
-        finalScore = scoreData.score || 50;
-        finalFeedback = scoreData.feedback || 'Interview completed successfully.';
-        console.log('Interview scored:', { score: finalScore, feedback: finalFeedback });
-      } catch (scoreError: any) {
-        console.error('Error scoring interview:', scoreError);
-        toast({
-          title: "Warning",
-          description: "Could not score interview response, using default score.",
-          variant: "default",
-        });
+      if (userAnswerCount === 0) {
+        finalScore = 0;
+        finalFeedback = 'No interview answers were recorded. Please speak your responses before ending the interview.';
+      } else {
+        try {
+          const scoreData = await apiClient.scoreInterview({ conversationText, jobDescription });
+          finalScore = typeof scoreData.score === 'number' ? scoreData.score : finalScore;
+          finalFeedback = scoreData.feedback || 'Interview completed successfully.';
+          console.log('Interview scored:', { score: finalScore, feedback: finalFeedback });
+        } catch (scoreError: any) {
+          console.error('Error scoring interview:', scoreError);
+          toast({
+            title: "Warning",
+            description: "Could not score interview response, using default score.",
+            variant: "default",
+          });
+        }
       }
 
       await apiClient.updateSession(sessionId as string, { status: 'completed', interviewScore: finalScore, interviewFeedback: finalFeedback, transcript: conversationText, completedAt: new Date().toISOString() });

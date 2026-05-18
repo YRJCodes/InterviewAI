@@ -114,6 +114,14 @@ export const createCustomJob = async (title: string, description: string, requir
   return await authFetch('/custom-job', { method: 'POST', body: JSON.stringify({ title, description, requirements }) });
 };
 
+export const getCustomJobs = async () => {
+  return await authFetch('/custom-job');
+};
+
+export const deleteCustomJob = async (id: string) => {
+  return await authFetch(`/custom-job/${id}`, { method: 'DELETE' });
+};
+
 export const uploadFile = async (file: File, sessionId: string) => {
   const token = getToken();
   const formData = new FormData();
@@ -148,5 +156,5 @@ export const uploadFile = async (file: File, sessionId: string) => {
   }
 };
 
-export default { setToken, getToken, login, register, me, fetchJobRole, fetchCustomJob, listJobRoles, createSession, updateSession, getSession, getUserSessions, analyzeResume, scoreInterview, voiceInterview, getProfile, updateCredits, createCustomJob, createPayPalOrder, capturePayPalOrder, uploadFile };
+export default { setToken, getToken, login, register, me, fetchJobRole, fetchCustomJob, listJobRoles, createSession, updateSession, getSession, getUserSessions, analyzeResume, scoreInterview, voiceInterview, getProfile, updateCredits, createCustomJob, getCustomJobs, deleteCustomJob, createPayPalOrder, capturePayPalOrder, uploadFile };
 

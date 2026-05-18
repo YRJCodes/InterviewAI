@@ -127,6 +127,51 @@ const Feedback = () => {
     return `${mins}m ${secs}s`;
   };
 
+  const getResumeTips = () => {
+    const tips: string[] = [];
+    if (resumeScore >= 80) {
+      tips.push('Your resume is strong; keep emphasizing measurable achievements and relevant skills.');
+    } else if (resumeScore >= 60) {
+      tips.push('Tailor your resume to the role by adding clearer achievements and keywords.');
+    } else {
+      tips.push('Refocus your resume on relevant skills, measurable results, and role-specific experience.');
+    }
+
+    if (resumeFeedback.toLowerCase().includes('grammar') || resumeFeedback.toLowerCase().includes('spelling')) {
+      tips.push('Proofread your resume for grammar and spelling to improve clarity.');
+    }
+
+    if (resumeFeedback.toLowerCase().includes('experience') || resumeFeedback.toLowerCase().includes('detail')) {
+      tips.push('Use concrete examples and specific results when describing your experience.');
+    }
+
+    return tips;
+  };
+
+  const getInterviewTips = () => {
+    const tips: string[] = [];
+    if (interviewScore >= 80) {
+      tips.push('Keep answering with confidence and structure, and continue using strong examples.');
+    } else if (interviewScore >= 60) {
+      tips.push('Use the STAR method: Situation, Task, Action, Result for clearer responses.');
+    } else {
+      tips.push('Practice pacing your answers, staying concise, and supporting them with specific examples.');
+    }
+
+    if (interviewFeedback.toLowerCase().includes('confidence')) {
+      tips.push('Work on projecting confidence and maintaining steady eye contact or tone.');
+    }
+
+    if (interviewFeedback.toLowerCase().includes('fast') || interviewFeedback.toLowerCase().includes('pace')) {
+      tips.push('Slow down your responses and pause briefly before answering.');
+    }
+
+    return tips;
+  };
+
+  const resumeTips = getResumeTips();
+  const interviewTips = getInterviewTips();
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -270,6 +315,31 @@ const Feedback = () => {
             </CardContent>
           </Card>
         )}
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Improvement Tips</CardTitle>
+            <CardDescription>Practical tips based on your resume analysis and interview performance.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <div>
+              <h4 className="font-semibold mb-3">Resume Tips</h4>
+              <ul className="list-disc list-inside text-sm space-y-2 text-muted-foreground">
+                {resumeTips.map((tip, idx) => (
+                  <li key={`resume-tip-${idx}`}>{tip}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-3">Interview Tips</h4>
+              <ul className="list-disc list-inside text-sm space-y-2 text-muted-foreground">
+                {interviewTips.map((tip, idx) => (
+                  <li key={`interview-tip-${idx}`}>{tip}</li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

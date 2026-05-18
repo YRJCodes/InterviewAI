@@ -12,6 +12,7 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,6 +21,11 @@ const Auth = () => {
   const isStrongPassword = (value: string) => {
     const pattern = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}/;
     return pattern.test(value);
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    setIsPasswordStrong(isStrongPassword(value));
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -132,14 +138,18 @@ const Auth = () => {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
                   required
                   minLength={8}
                   pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}"
                 />
                 {!isLogin && (
-                  <p className="text-xs text-muted-foreground">
-                    Use at least 8 characters, including uppercase, lowercase, a number, and a special symbol.
+                  <p className={`text-xs ${password.length === 0 ? 'text-muted-foreground' : isPasswordStrong ? 'text-emerald-600' : 'text-destructive'}`}>
+                    {password.length === 0
+                      ? 'Use at least 8 characters, including uppercase, lowercase, a number, and a special symbol.'
+                      : isPasswordStrong
+                      ? 'Strong password! Ready to sign up.'
+                      : 'Password needs uppercase, lowercase, number, and symbol.'}
                   </p>
                 )}
               </div>

@@ -123,10 +123,10 @@ const VoiceInterview = () => {
 
   const loadJobDescription = async () => {
     try {
-      const { session } = await apiClient.getSession(sessionId as string);
+      const session = await apiClient.getSession(sessionId as string);
       if (session) {
-        const desc = session.jobRoleId ? session.jobRoleId.description : session.customJobId?.description;
-        setJobDescription(desc || '');
+        const desc = session.jobRole?.description || session.customJob?.description || '';
+        setJobDescription(desc);
       }
     } catch (error) {
       console.error('Error loading job description:', error);
@@ -136,8 +136,15 @@ const VoiceInterview = () => {
   const startInterview = async () => {
     setInterviewStarted(true);
     setIsAISpeaking(true);
-    setStartTime(new Date());
+    const now = new Date();
+    setStartTime(now);
     
+    try {
+      await apiClient.updateSession(sessionId as string, { status: 'in_progress' });
+    } catch (error) {
+      console.warn('Unable to update session status to in_progress');
+    }
+
     // Get initial greeting from AI
     try {
       const { message } = await apiClient.voiceInterview({ action: 'generate', messages: [{ role: 'user', content: 'Start the interview with a greeting and first question.' }], jobDescription });
@@ -341,6 +348,12 @@ const VoiceInterview = () => {
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
                     <span>{formatTime(elapsedTime)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {startTime ? `Expected finish by ${new Date(startTime.getTime() + 12 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Estimated 10-15 min'}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -7,6 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogOut, Plus, Briefcase, Code, Server, Rocket, Settings, Palette } from "lucide-react";
 
+interface InterviewSession {
+  id: string;
+  status: string;
+  createdAt: string;
+  completedAt?: string;
+  resumeScore?: number;
+  interviewScore?: number;
+  jobRole?: { title: string };
+  customJob?: { title: string };
+}
+
 interface Profile {
   credits: number;
   full_name: string;
@@ -25,6 +36,7 @@ interface JobRole {
 const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [jobRoles, setJobRoles] = useState<JobRole[]>([]);
+  const [sessions, setSessions] = useState<InterviewSession[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,10 +44,12 @@ const Dashboard = () => {
   useEffect(() => {
     checkUser();
     fetchJobRoles();
+    fetchSessions();
     
     // Re-fetch profile when auth status changes (e.g., after payment capture)
     const handleAuthChange = () => {
       checkUser();
+      fetchSessions();
     };
     window.addEventListener('auth-change', handleAuthChange);
     return () => window.removeEventListener('auth-change', handleAuthChange);
@@ -65,6 +79,15 @@ const Dashboard = () => {
     }
   };
 
+  const fetchSessions = async () => {
+    try {
+      const sessions = await apiClient.getUserSessions();
+      setSessions(Array.isArray(sessions) ? sessions : []);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+    }
+  };
+
   const handleLogout = async () => {
     setToken(null);
     window.dispatchEvent(new Event('auth-change'));
@@ -81,6 +104,32 @@ const Dashboard = () => {
       return;
     }
     navigate(`/interview/${jobRoleId}`);
+  };
+
+  const formatDateTime = (dateValue: string) => {
+    try {
+      return new Date(dateValue).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return dateValue;
+    }
+  };
+
+  const formatDuration = (start: string, end?: string) => {
+    if (!end) return 'Still in progress';
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const seconds = Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / 1000));
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  const viewSession = (session: InterviewSession) => {
+    if (session.status === 'completed') {
+      navigate(`/feedback/${session.id}`);
+    } else {
+      navigate(`/voice-interview/${session.id}`);
+    }
   };
 
   if (loading) {
@@ -177,6 +226,70 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
+
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle>Past Interviews</CardTitle>
+                <CardDescription>Review completed and in-progress sessions.</CardDescription>
+              </div>
+              <Badge variant="outline" className="uppercase text-xs">
+                {sessions.length} sessions
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {sessions.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                You have no past interviews yet. Start a new session to create your first one.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sessions.map((session) => {
+                  const title = session.jobRole?.title || session.customJob?.title || 'Interview Session';
+                  const statusLabel = session.status === 'completed' ? 'Completed' : session.status === 'in_progress' ? 'In progress' : session.status === 'resume_uploaded' ? 'Resume ready' : 'Started';
+                  const overallScore = session.status === 'completed' ? Math.round(((session.resumeScore ?? 0) + (session.interviewScore ?? 0)) / 2) : undefined;
+                  return (
+                    <div key={session.id} className="rounded-xl border border-border p-4 sm:p-5">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">{formatDateTime(session.createdAt)}</p>
+                          <h3 className="text-lg font-semibold">{title}</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={session.status === 'completed' ? 'secondary' : 'outline'}>{statusLabel}</Badge>
+                          {overallScore !== undefined && (
+                            <Badge variant="outline">{overallScore}%</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-lg bg-secondary/5 p-3 text-sm">
+                          <p className="font-medium">Duration</p>
+                          <p className="text-muted-foreground">{formatDuration(session.createdAt, session.completedAt)}</p>
+                        </div>
+                        <div className="rounded-lg bg-secondary/5 p-3 text-sm">
+                          <p className="font-medium">Resume score</p>
+                          <p className="text-muted-foreground">{session.resumeScore ?? '—'}%</p>
+                        </div>
+                        <div className="rounded-lg bg-secondary/5 p-3 text-sm">
+                          <p className="font-medium">Interview score</p>
+                          <p className="text-muted-foreground">{session.interviewScore ?? '—'}%</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <Button onClick={() => viewSession(session)} size="sm" variant="outline">
+                          {session.status === 'completed' ? 'View Feedback' : 'Continue Interview'}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="mt-8 bg-gradient-primary text-primary-foreground">
           <CardHeader>

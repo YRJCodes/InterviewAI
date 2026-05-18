@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trophy, TrendingUp, Home, FileText } from "lucide-react";
 
 interface InterviewSession {
+  id?: string;
+  createdAt?: string;
+  completedAt?: string;
   resumeScore?: number;
   resume_score?: number;
   resumeFeedback?: string;
@@ -19,6 +22,12 @@ interface InterviewSession {
   interview_feedback?: string;
   jobRoleId?: any;
   customJobId?: any;
+  jobRole?: {
+    title: string;
+  };
+  customJob?: {
+    title: string;
+  };
   job_roles?: {
     title: string;
   };
@@ -83,15 +92,29 @@ const Feedback = () => {
   const resumeFeedback = session.resumeFeedback ?? session.resume_feedback ?? '';
   const interviewScore = session.interviewScore ?? session.interview_score ?? 0;
   const interviewFeedback = session.interviewFeedback ?? session.interview_feedback ?? '';
-  
-  // Get job title from populated jobRoleId or customJobId
-  const jobTitle = session.jobRoleId?.title || session.customJobId?.title || session.job_roles?.title || 'Interview';
+  const createdAt = session.createdAt ? new Date(session.createdAt) : undefined;
+  const completedAt = session.completedAt ? new Date(session.completedAt) : undefined;
+
+  const jobTitle = session.jobRole?.title || session.customJob?.title || session.jobRoleId?.title || session.customJobId?.title || session.job_roles?.title || 'Interview';
   
   const overallScore = Math.round((resumeScore + interviewScore) / 2);
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-accent";
     if (score >= 60) return "text-primary";
     return "text-destructive";
+  };
+
+  const formatDateTime = (date?: Date) => {
+    if (!date) return 'N/A';
+    return date.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatElapsed = (start?: Date, end?: Date) => {
+    if (!start || !end) return 'In progress';
+    const seconds = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 1000));
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
   };
 
   return (
@@ -190,6 +213,34 @@ const Feedback = () => {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle>Session Details</CardTitle>
+                <CardDescription>Review when this interview ended and how long it lasted.</CardDescription>
+              </div>
+              <Badge variant="outline" className="uppercase text-xs">
+                {completedAt ? 'Completed' : 'In progress'}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-lg bg-secondary/5 p-4 text-sm">
+              <p className="font-medium">Started</p>
+              <p className="text-muted-foreground">{formatDateTime(createdAt)}</p>
+            </div>
+            <div className="rounded-lg bg-secondary/5 p-4 text-sm">
+              <p className="font-medium">Ended</p>
+              <p className="text-muted-foreground">{formatDateTime(completedAt)}</p>
+            </div>
+            <div className="rounded-lg bg-secondary/5 p-4 text-sm md:col-span-2">
+              <p className="font-medium">Duration</p>
+              <p className="text-muted-foreground">{formatElapsed(createdAt, completedAt)}</p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

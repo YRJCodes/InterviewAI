@@ -86,6 +86,10 @@ export const getSession = async (id: string) => {
   return await authFetch(`/interview-sessions/${id}`);
 };
 
+export const getUserSessions = async () => {
+  return await authFetch('/interview-sessions');
+};
+
 export const analyzeResume = async (data: any) => {
   return await authFetch('/functions/analyze-resume', { method: 'POST', body: JSON.stringify(data) });
 };

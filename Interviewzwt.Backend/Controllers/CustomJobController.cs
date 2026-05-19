@@ -26,12 +26,29 @@ namespace Interviewzwt.Backend.Controllers
             return Ok(customJob);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetForUser()
+        {
+            var userId = Guid.Parse(User.FindFirst("id")!.Value);
+            var jobs = await _jobService.GetCustomJobsByUser(userId);
+            return Ok(jobs);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var job = await _jobService.GetCustomJobById(id);
             if (job == null) return NotFound();
             return Ok(job);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var userId = Guid.Parse(User.FindFirst("id")!.Value);
+            var deleted = await _jobService.DeleteCustomJob(userId, id);
+            if (!deleted) return NotFound();
+            return NoContent();
         }
     }
 

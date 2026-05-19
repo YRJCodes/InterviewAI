@@ -21,11 +21,18 @@ namespace Interviewzwt.Backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var result = await _authService.Register(request);
-            if (result == null)
-                return BadRequest(new { message = "Email already exists" });
+            try
+            {
+                var result = await _authService.Register(request);
+                if (result == null)
+                    return BadRequest(new { message = "Email already exists" });
 
-            return Ok(result);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost("login")]

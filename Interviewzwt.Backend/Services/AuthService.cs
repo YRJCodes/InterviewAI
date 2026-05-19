@@ -24,6 +24,9 @@ namespace Interviewzwt.Backend.Services
 
         public async Task<AuthResponse?> Register(RegisterRequest request)
         {
+            if (!IsStrongPassword(request.Password))
+                throw new ArgumentException("Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.");
+
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return null;
 
@@ -45,6 +48,18 @@ namespace Interviewzwt.Backend.Services
                 Token = token,
                 User = MapToDto(user)
             };
+        }
+
+        private static bool IsStrongPassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+                return false;
+
+            return password.Length >= 8
+                && password.Any(char.IsUpper)
+                && password.Any(char.IsLower)
+                && password.Any(char.IsDigit)
+                && password.Any(ch => "@$!%*?&".Contains(ch));
         }
 
         public async Task<AuthResponse?> Login(LoginRequest request)

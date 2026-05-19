@@ -86,6 +86,10 @@ export const getSession = async (id: string) => {
   return await authFetch(`/interview-sessions/${id}`);
 };
 
+export const getUserSessions = async () => {
+  return await authFetch('/interview-sessions');
+};
+
 export const analyzeResume = async (data: any) => {
   return await authFetch('/functions/analyze-resume', { method: 'POST', body: JSON.stringify(data) });
 };
@@ -108,6 +112,14 @@ export const updateCredits = async (credits: number) => {
 
 export const createCustomJob = async (title: string, description: string, requirements: string[]) => {
   return await authFetch('/custom-job', { method: 'POST', body: JSON.stringify({ title, description, requirements }) });
+};
+
+export const getCustomJobs = async () => {
+  return await authFetch('/custom-job');
+};
+
+export const deleteCustomJob = async (id: string) => {
+  return await authFetch(`/custom-job/${id}`, { method: 'DELETE' });
 };
 
 export const uploadFile = async (file: File, sessionId: string) => {
@@ -144,5 +156,5 @@ export const uploadFile = async (file: File, sessionId: string) => {
   }
 };
 
-export default { setToken, getToken, login, register, me, fetchJobRole, fetchCustomJob, listJobRoles, createSession, updateSession, getSession, analyzeResume, scoreInterview, voiceInterview, getProfile, updateCredits, createCustomJob, createPayPalOrder, capturePayPalOrder, uploadFile };
+export default { setToken, getToken, login, register, me, fetchJobRole, fetchCustomJob, listJobRoles, createSession, updateSession, getSession, getUserSessions, analyzeResume, scoreInterview, voiceInterview, getProfile, updateCredits, createCustomJob, getCustomJobs, deleteCustomJob, createPayPalOrder, capturePayPalOrder, uploadFile };
 

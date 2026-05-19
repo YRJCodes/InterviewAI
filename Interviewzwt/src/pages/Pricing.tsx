@@ -9,54 +9,60 @@ import { Check, Zap, TrendingUp, Star } from "lucide-react";
 const Pricing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const pricingPlans = [
-    {
-      name: "Starter",
-      price: 9,
-      credits: 10,
-      icon: Zap,
-      popular: false,
-      features: [
-        "10 interview sessions",
-        "Resume analysis",
-        "Voice interviews",
-        "Instant feedback",
-        "Valid for 3 months",
-      ],
-    },
-    {
-      name: "Pro",
-      price: 24,
-      credits: 30,
-      icon: TrendingUp,
-      popular: true,
-      features: [
-        "30 interview sessions",
-        "Resume analysis",
-        "Voice interviews",
-        "Instant feedback",
-        "Priority support",
-        "Valid for 6 months",
-      ],
-    },
-    {
-      name: "Premium",
-      price: 49,
-      credits: 100,
-      icon: Star,
-      popular: false,
-      features: [
-        "100 interview sessions",
-        "Resume analysis",
-        "Voice interviews",
-        "Instant feedback",
-        "Priority support",
-        "Custom job descriptions",
-        "Valid for 12 months",
-      ],
-    },
-  ];
+const pricingPlans = [
+  {
+    name: "Starter",
+    originalPrice: 9,
+    price: 9,
+    credits: 15,
+    icon: Zap,
+    popular: false,
+    features: [
+      "15 interview sessions",
+      "Resume analysis",
+      "Voice interviews",
+      "Instant feedback",
+      "Valid for 3 months",
+    ],
+  },
+  {
+    name: "Pro",
+    originalPrice: 27,
+    price: 19,
+    credits: 45,
+    icon: TrendingUp,
+    popular: true,
+    features: [
+      "45 interview sessions",
+      "Resume analysis",
+      "Voice interviews",
+      "Instant feedback",
+      "Priority support",
+      "Saved interview history",
+      "Valid for 6 months",
+    ],
+  },
+  {
+    name: "Premium",
+    originalPrice: 54,
+    price: 29,
+    credits: 90,
+    icon: Star,
+    popular: false,
+    features: [
+      "90 interview sessions",
+      "Resume analysis",
+      "Voice interviews",
+      "Instant feedback",
+      "Priority support",
+      "Custom job descriptions",
+      "Advanced analytics",
+      "Personalized improvement tips",
+      "Valid for 12 months",
+    ],
+  },
+];
+    
 
   const handlePurchase = async (planName: string, price: number, credits: number) => {
     try {
@@ -122,17 +128,27 @@ const Pricing = () => {
                     <IconComponent className="h-6 w-6" />
                   </div>
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription>
-                    <div className="mt-4">
-                      <span className="text-4xl font-bold text-foreground">${plan.price}</span>
-                      <span className="text-muted-foreground ml-2">one-time</span>
-                    </div>
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="text-lg">
-                        {plan.credits} Credits
-                      </Badge>
-                    </div>
-                  </CardDescription>
+                 <CardDescription>
+  <div className="mt-4 flex items-center justify-center gap-3">
+    {plan.originalPrice !== plan.price && (
+      <span className="text-lg text-muted-foreground line-through">
+        ${plan.originalPrice}
+      </span>
+    )}
+
+    <span className="text-4xl font-bold text-foreground">
+      ${plan.price}
+    </span>
+
+    <span className="text-muted-foreground">one-time</span>
+  </div>
+
+  <div className="mt-2">
+    <Badge variant="secondary" className="text-lg">
+      {plan.credits} Credits
+    </Badge>
+  </div>
+</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <ul className="space-y-3">

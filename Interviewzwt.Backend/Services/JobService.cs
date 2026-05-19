@@ -29,6 +29,36 @@ namespace Interviewzwt.Backend.Services
             return await _context.CustomJobs.FindAsync(id);
         }
 
+        public async Task<IEnumerable<CustomJobDescription>> GetCustomJobsByUser(Guid userId)
+        {
+            return await _context.CustomJobs
+                .Where(job => job.UserId == userId)
+                .OrderByDescending(job => job.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<bool> DeleteCustomJob(Guid userId, Guid customJobId)
+        {
+            var customJob = await _context.CustomJobs.FirstOrDefaultAsync(job => job.Id == customJobId && job.UserId == userId);
+            if (customJob == null)
+            {
+                return false;
+            }
+
+            var sessionsWithCustomJob = await _context.InterviewSessions
+                .Where(session => session.CustomJobId == customJobId)
+                .ToListAsync();
+
+            foreach (var session in sessionsWithCustomJob)
+            {
+                session.CustomJobId = null;
+            }
+
+            _context.CustomJobs.Remove(customJob);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<CustomJobDescription> CreateCustomJob(Guid userId, string title, string description, List<string> requirements)
         {
             var customJob = new CustomJobDescription

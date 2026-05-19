@@ -60,6 +60,8 @@ namespace Interviewzwt.Backend.Services
         public async Task<IEnumerable<InterviewSession>> GetUserSessions(Guid userId)
         {
             return await _context.InterviewSessions
+                .Include(s => s.JobRole)
+                .Include(s => s.CustomJob)
                 .Where(s => s.UserId == userId)
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();

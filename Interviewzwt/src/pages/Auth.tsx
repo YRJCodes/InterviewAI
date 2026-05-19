@@ -12,13 +12,33 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const isStrongPassword = (value: string) => {
+    const pattern = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}/;
+    return pattern.test(value);
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    setIsPasswordStrong(isStrongPassword(value));
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && !isStrongPassword(password)) {
+      toast({
+        title: 'Weak password',
+        description: 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -86,7 +106,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAuth} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-4" noValidate>
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
@@ -118,10 +138,22 @@ const Auth = () => {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
+                  pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}"
+                  title="Password must include uppercase, lowercase, a number, and a special character."
+                  aria-invalid={!isLogin && password.length > 0 && !isPasswordStrong}
                 />
+                {!isLogin && (
+                  <p className={`text-xs ${password.length === 0 ? 'text-muted-foreground' : isPasswordStrong ? 'text-emerald-600' : 'text-destructive'}`}>
+                    {password.length === 0
+                      ? 'Use at least 8 characters, including uppercase, lowercase, a number, and a special symbol.'
+                      : isPasswordStrong
+                      ? 'Strong password! Ready to sign up.'
+                      : 'Password needs uppercase, lowercase, number, and symbol.'}
+                  </p>
+                )}
               </div>
               <Button
                 type="submit"
